@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfiguration serviceName="ConnectorRideAutoReservation" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="4" osVersion="*" schemaVersion="2015-04.2.6">
+  <Role name="WorkerRole1">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=connectorrideworker;AccountKey=6Yld/fXyqwyvDuPqI1uNw+MH15JftRtanyUJHZyLU6/7sS3IsVEq3uCdYCAY0g6WPdpoj8Np2EvqdqWp663uow==" />
+      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" value="d4f3bc07-68e8-4c29-8b56-0b1a37eed44b" />
+    </ConfigurationSettings>
+  </Role>
+</ServiceConfiguration>
