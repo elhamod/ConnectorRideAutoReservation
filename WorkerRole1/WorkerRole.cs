@@ -68,7 +68,7 @@ namespace WorkerRole1
         private async Task RunAsync(CancellationToken cancellationToken)
         {
                 TelemetryClient telemetryClient = new TelemetryClient();
-                telemetryClient.InstrumentationKey = "";
+                telemetryClient.InstrumentationKey = RoleEnvironment.GetConfigurationSettingValue("APPINSIGHTS_INSTRUMENTATIONKEY");
             
                 string RequestVerificationToken = "__RequestVerificationToken";
                 string domainUrl = "https://www.connectorride.com";
@@ -113,8 +113,8 @@ namespace WorkerRole1
                 Dictionary<string, string> signInContentDictionary = new Dictionary<string, string>();
                 signInContentDictionary.Add(RequestVerificationToken, token);
                 signInContentDictionary.Add("ComputerTypes", "PublicComputer");
-                signInContentDictionary.Add("UserName", "");
-                signInContentDictionary.Add("Password", "");
+                signInContentDictionary.Add("UserName", RoleEnvironment.GetConfigurationSettingValue("username"));
+                signInContentDictionary.Add("Password", RoleEnvironment.GetConfigurationSettingValue("password"));
                 string signInContentDictionaryString = string.Join("&", signInContentDictionary.Select(x => x.Key + "=" + x.Value).ToArray());
                 byte[] signInContentBytes = Encoding.ASCII.GetBytes(signInContentDictionaryString);
                 signInStream.Write(signInContentBytes, 0, signInContentBytes.Length);
