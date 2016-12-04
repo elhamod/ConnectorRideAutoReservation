@@ -149,7 +149,6 @@ namespace WorkerRole1
                 byte[] bookingDictionaryBytes = Encoding.ASCII.GetBytes(bookingDictionaryString);
                 bookingStream.Write(bookingDictionaryBytes, 0, bookingDictionaryBytes.Length);
                 bookingStream.Close();
-                await Task.Delay(10000);
                 response = (HttpWebResponse)request.GetResponse();
 
                 requestTelemetry = new RequestTelemetry();
@@ -161,7 +160,7 @@ namespace WorkerRole1
                 telemetryClient.Flush();
 
 
-                await Task.Delay(60*1000*24);
+                await Task.Delay(60*1000*int.Parse(RoleEnvironment.GetConfigurationSettingValue("periodInMinutes")));
             }
         }
     }

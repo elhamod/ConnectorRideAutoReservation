@@ -6,6 +6,7 @@
       <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" />
       <Setting name="username" />
       <Setting name="password" />
+      <Setting name="periodInMinutes" />
     </ConfigurationSettings>
   </WorkerRole>
 </ServiceDefinition>
