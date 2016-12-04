@@ -3,8 +3,10 @@
   <Role name="WorkerRole1">
     <Instances count="1" />
     <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=connectorrideworker;AccountKey=6Yld/fXyqwyvDuPqI1uNw+MH15JftRtanyUJHZyLU6/7sS3IsVEq3uCdYCAY0g6WPdpoj8Np2EvqdqWp663uow==" />
-      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" value="d4f3bc07-68e8-4c29-8b56-0b1a37eed44b" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=;AccountKey=" />
+      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" value="" />
+      <Setting name="username" value=""/>
+      <Setting name="password" value=""/>
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

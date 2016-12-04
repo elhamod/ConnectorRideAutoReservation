@@ -68,7 +68,7 @@ namespace WorkerRole1
         private async Task RunAsync(CancellationToken cancellationToken)
         {
                 TelemetryClient telemetryClient = new TelemetryClient();
-                telemetryClient.InstrumentationKey = "d4f3bc07-68e8-4c29-8b56-0b1a37eed44b";
+                telemetryClient.InstrumentationKey = "";
             
                 string RequestVerificationToken = "__RequestVerificationToken";
                 string domainUrl = "https://www.connectorride.com";
@@ -130,7 +130,7 @@ namespace WorkerRole1
                 telemetryClient.Flush();
 
                 // Book
-                /*request = WebRequest.CreateHttp(bookUrl);
+                request = WebRequest.CreateHttp(bookUrl);
                 request.Method = "Post";
                 request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                 request.CookieContainer = cookieContainer;
@@ -143,6 +143,7 @@ namespace WorkerRole1
                 bookingDictionary.Add("DropDownListPick", "1");
                 bookingDictionary.Add("DropDownListDrop", "63");
                 bookingDictionary.Add("rbScheds", "118");
+                bookingDictionary.Add("IsFavorite", "false");
                 bookingDictionary.Add("X-Requested-With", "XMLHttpRequest");
                 string bookingDictionaryString = string.Join("&", bookingDictionary.Select(x => x.Key + "=" + x.Value).ToArray());
                 byte[] bookingDictionaryBytes = Encoding.ASCII.GetBytes(bookingDictionaryString);
@@ -157,7 +158,7 @@ namespace WorkerRole1
                 requestTelemetry.Name = "Book";
                 requestTelemetry.Properties.Concat(bookingDictionary);
                 telemetryClient.TrackRequest(requestTelemetry);
-                telemetryClient.Flush();*/
+                telemetryClient.Flush();
 
 
                 await Task.Delay(60*1000*24);

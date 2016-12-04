@@ -4,6 +4,8 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" />
       <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" />
+      <Setting name="username" />
+      <Setting name="password" />
     </ConfigurationSettings>
   </WorkerRole>
 </ServiceDefinition>
