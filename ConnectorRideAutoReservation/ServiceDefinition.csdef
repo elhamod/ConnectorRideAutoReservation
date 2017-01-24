@@ -3,9 +3,8 @@
   <WorkerRole name="WorkerRole1" vmsize="Small">
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" />
-      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" />
-      <Setting name="username" />
-      <Setting name="password" />
+      <Setting name="CertThumbprint" />
+      <Setting name="clientId" />
       <Setting name="periodInMinutes" />
     </ConfigurationSettings>
   </WorkerRole>

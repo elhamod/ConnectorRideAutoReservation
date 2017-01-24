@@ -9,12 +9,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Microsoft.WindowsAzure;
-using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
-using Microsoft.WindowsAzure.Storage;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.Azure.KeyVault;
 
 namespace WorkerRole1
 {
@@ -67,13 +65,20 @@ namespace WorkerRole1
 
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-                TelemetryClient telemetryClient = new TelemetryClient();
-                telemetryClient.InstrumentationKey = RoleEnvironment.GetConfigurationSettingValue("APPINSIGHTS_INSTRUMENTATIONKEY");
-            
-                string RequestVerificationToken = "__RequestVerificationToken";
-                string domainUrl = "https://www.connectorride.com";
-                string loginUrl = domainUrl + "/Account/Login";
-                string bookUrl = domainUrl + "/Flex/BookFlex";
+            var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(KeyVaultAuthHelper.GetAccessToken));
+            //var keyVaultClient = new KeyVaultClient(AuthenticateVault); // In case we use key instead of cert
+
+            var instrumentationkey = await keyVaultClient.GetSecretAsync("https://connectorridekeyvault.vault.azure.net/", "instrumentationkey");
+            var username = await keyVaultClient.GetSecretAsync("https://connectorridekeyvault.vault.azure.net/", "username");
+            var password = await keyVaultClient.GetSecretAsync("https://connectorridekeyvault.vault.azure.net/", "password");
+
+            TelemetryClient telemetryClient = new TelemetryClient();
+            telemetryClient.InstrumentationKey = instrumentationkey.Value;
+
+            string RequestVerificationToken = "__RequestVerificationToken";
+            string domainUrl = "https://www.connectorride.com";
+            string loginUrl = domainUrl + "/Account/Login";
+            string bookUrl = domainUrl + "/Flex/BookFlex";
 
             // TODO: Replace the following with your own logic.
             while (!cancellationToken.IsCancellationRequested)
@@ -92,7 +97,7 @@ namespace WorkerRole1
                 doc.LoadHtml(responseFromServer);
                 HtmlNode requestVerificationTokenNode = doc.DocumentNode.Descendants().Where(node => node.GetAttributeValue("name", "Error") == RequestVerificationToken).First();
                 string token = requestVerificationTokenNode.GetAttributeValue("value", "Error");
-                
+
                 RequestTelemetry requestTelemetry = new RequestTelemetry();
                 requestTelemetry.Url = new Uri(loginUrl);
                 requestTelemetry.ResponseCode = response.StatusCode.ToString();
@@ -113,8 +118,8 @@ namespace WorkerRole1
                 Dictionary<string, string> signInContentDictionary = new Dictionary<string, string>();
                 signInContentDictionary.Add(RequestVerificationToken, token);
                 signInContentDictionary.Add("ComputerTypes", "PublicComputer");
-                signInContentDictionary.Add("UserName", RoleEnvironment.GetConfigurationSettingValue("username"));
-                signInContentDictionary.Add("Password", RoleEnvironment.GetConfigurationSettingValue("password"));
+                signInContentDictionary.Add("UserName", username.Value);
+                signInContentDictionary.Add("Password", password.Value);
                 string signInContentDictionaryString = string.Join("&", signInContentDictionary.Select(x => x.Key + "=" + x.Value).ToArray());
                 byte[] signInContentBytes = Encoding.ASCII.GetBytes(signInContentDictionaryString);
                 signInStream.Write(signInContentBytes, 0, signInContentBytes.Length);
@@ -160,7 +165,7 @@ namespace WorkerRole1
                 telemetryClient.Flush();
 
 
-                await Task.Delay(60*1000*int.Parse(RoleEnvironment.GetConfigurationSettingValue("periodInMinutes")));
+                await Task.Delay(60 * 1000 * int.Parse(RoleEnvironment.GetConfigurationSettingValue("periodInMinutes")));
             }
         }
     }

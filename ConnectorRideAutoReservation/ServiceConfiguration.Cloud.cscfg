@@ -4,9 +4,8 @@
     <Instances count="1" />
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=;AccountKey=" />
-      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" value="" />
-      <Setting name="username" value=""/>
-      <Setting name="password" value=""/>
+      <Setting name="CertThumbprint" value="98B9D50001935656CA0B7DDAC0617CD0B60A0957" />
+      <Setting name="clientId" value="de735ed7-640c-42b2-807b-1f652686a5ce"/>
       <Setting name="periodInMinutes" value="60"/>
     </ConfigurationSettings>
   </Role>
