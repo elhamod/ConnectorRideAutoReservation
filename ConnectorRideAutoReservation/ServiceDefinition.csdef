@@ -5,7 +5,12 @@
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" />
       <Setting name="CertThumbprint" />
       <Setting name="clientId" />
-      <Setting name="periodInMinutes" />
+      <Setting name="ServiceBusQueueName" />
+      <Setting name="SecretsVault" />
+      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" />
     </ConfigurationSettings>
+    <Certificates>
+      <Certificate storeLocation="CurrentUser" storeName="My" name="VaultCertificate"/>
+    </Certificates>
   </WorkerRole>
 </ServiceDefinition>

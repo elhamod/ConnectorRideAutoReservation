@@ -5,8 +5,13 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="CertThumbprint" value="98B9D50001935656CA0B7DDAC0617CD0B60A0957" />
-      <Setting name="clientId" value="de735ed7-640c-42b2-807b-1f652686a5ce"/>
-      <Setting name="periodInMinutes" value="60"/>
+      <Setting name="clientId" value="de735ed7-640c-42b2-807b-1f652686a5ce" />
+      <Setting name="ServiceBusQueueName" value="connectorservicebusqueue" />
+      <Setting name="SecretsVault" value="https://connectorridekeyvault.vault.azure.net/" />
+      <Setting name="APPINSIGHTS_INSTRUMENTATIONKEY" value="" />
     </ConfigurationSettings>
+    <Certificates>
+      <Certificate name="VaultCertificate" thumbprint="98B9D50001935656CA0B7DDAC0617CD0B60A0957"/>
+    </Certificates>
   </Role>
 </ServiceConfiguration>
