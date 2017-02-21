@@ -183,7 +183,8 @@ namespace WorkerRole1
 
                         // Book
                         Dictionary<string, string> bookingStandbyDictionary = new Dictionary<string, string>();
-                        DateTime reservationDateTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.AddDays(14).Day, 4, 29, 0); // we book 2 weeks in advance
+                        DateTime reservationDateTime = DateTime.Today.AddDays(14);
+                        reservationDateTime = reservationDateTime.Date + new TimeSpan(4, 29, 0); // we book 14 weeks in advance
                         bookingStandbyDictionary.Add("RouteID", "12770"); // This needs to be automated
                         bookingStandbyDictionary.Add("OriginalDateTime", HttpUtility.UrlEncode(String.Format("{0:G}", reservationDateTime)));
                         bookingStandbyDictionary.Add("Bike", "False");
