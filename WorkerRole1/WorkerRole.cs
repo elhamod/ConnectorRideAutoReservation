@@ -25,7 +25,11 @@ namespace WorkerRole1
         private const string RequestVerificationToken = "__RequestVerificationToken";
         private const string domainUrl = "https://www.connectorride.com";
         private const string loginUrl = domainUrl + "/Account/Login";
+        private const string oneTimeFlexPartial = domainUrl + "/Flex/ReturnOneTimeFlexPartial";
         private const string bookStandbyUrl = domainUrl + "/Flex/BookFlexOrStandby";
+
+        private const string routeName = "WEST SEATTLE";
+        private const string dropLocationName = "WEST SEATTLE CHRISTIAN CHURCH";
 
         private TelemetryClient telemetryClient;
         private GetTokenResult getTokenResult;
@@ -113,20 +117,50 @@ namespace WorkerRole1
             SendTelemetry(loginUrl, "GetToken", response.StatusCode.ToString(), properties);
         }
 
-        private void SendRequest(string url, string requestName, Dictionary<string, string> requestContentDictionary, Dictionary<string, string> telemtryDictionary)
+        private HttpWebResponse SendRequest(string url, string requestName, Dictionary<string, string> requestContentDictionary, Dictionary<string, string> telemtryDictionary)
         {
             HttpWebRequest request = WebRequest.CreateHttp(url);
             request.Method = "Post";
             request.ContentType = "application/x-www-form-urlencoded";
             request.CookieContainer = cookieContainer;
-            Stream signInStream = request.GetRequestStream();
-            string signInContentDictionaryString = string.Join("&", requestContentDictionary.Select(x => x.Key + "=" + x.Value).ToArray());
-            byte[] signInContentBytes = Encoding.ASCII.GetBytes(signInContentDictionaryString);
-            signInStream.Write(signInContentBytes, 0, signInContentBytes.Length);
-            signInStream.Close();
+            Stream stream = request.GetRequestStream();
+            string contentDictionaryString = string.Join("&", requestContentDictionary.Select(x => x.Key + "=" + x.Value).ToArray());
+            byte[] contentBytes = Encoding.ASCII.GetBytes(contentDictionaryString);
+            stream.Write(contentBytes, 0, contentBytes.Length);
+            stream.Close();
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 
             SendTelemetry(url, requestName, response.StatusCode.ToString(), telemtryDictionary);
+
+            return response;
+        }
+
+        private string processRouteIdresponse(HttpWebResponse response)
+        {
+            StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+            string sourceCode = sr.ReadToEnd();
+            HtmlAgilityPack.HtmlDocument htmlDocument = new HtmlAgilityPack.HtmlDocument();
+            htmlDocument.LoadHtml(sourceCode);
+            HtmlNode routeList = htmlDocument.GetElementbyId("DropDownList");
+            string jqueryText = routeList.NextSibling.InnerHtml;
+            System.Text.RegularExpressions.Match jobjectString = System.Text.RegularExpressions.Regex.Match(jqueryText, @"\[{.*}\]");
+            Newtonsoft.Json.Linq.JArray jarray = Newtonsoft.Json.Linq.JArray.Parse(jobjectString.Value);
+            var routeToken = jarray.First(c => c["Description"].ToString().Contains(routeName));
+            return (routeToken.First(c => { return (c as Newtonsoft.Json.Linq.JProperty).Name == "ID"; }) as Newtonsoft.Json.Linq.JProperty).Value.ToString();
+        }
+
+        private string processDropIdresponse(HttpWebResponse response)
+        {
+            StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+            string sourceCode = sr.ReadToEnd();
+            HtmlAgilityPack.HtmlDocument htmlDocument = new HtmlAgilityPack.HtmlDocument();
+            htmlDocument.LoadHtml(sourceCode);
+            HtmlNode routeList = htmlDocument.GetElementbyId("DropDownListDrop");
+            string jqueryText = routeList.NextSibling.InnerHtml;
+            System.Text.RegularExpressions.Match jobjectString = System.Text.RegularExpressions.Regex.Match(jqueryText, @"\[{.*}\]");
+            Newtonsoft.Json.Linq.JArray jarray = Newtonsoft.Json.Linq.JArray.Parse(jobjectString.Value);
+            var routeToken = jarray.First(c => c["Name"].ToString().Contains(dropLocationName));
+            return (routeToken.First(c => { return (c as Newtonsoft.Json.Linq.JProperty).Name == "ID"; }) as Newtonsoft.Json.Linq.JProperty).Value.ToString();
         }
 
         private void CreateCookieContainer()
@@ -179,23 +213,45 @@ namespace WorkerRole1
                         signInContentDictionary.Add("Password", password.Value);
                         var telemetryProperties = new Dictionary<string, string>();
                         telemetryProperties.Add("RequestVerificationToken", getTokenResult.token);
-                        SendRequest(loginUrl, "Login", signInContentDictionary, telemetryProperties);
+                        var response = SendRequest(loginUrl, "Login", signInContentDictionary, telemetryProperties);
+
+                        DateTime reservationDateTime = DateTime.Today.AddDays(14);
+                        reservationDateTime = reservationDateTime.Date + new TimeSpan(16, 29, 0); // we book 14 weeks in advance
+
+                        // Get route id
+                        Dictionary<string, string> routeIdDictionary = new Dictionary<string, string>();
+                        routeIdDictionary.Add("isAm", "false");
+                        routeIdDictionary.Add("date", String.Format("{0:MM/dd/yyyy}", reservationDateTime));
+                        routeIdDictionary.Add(RequestVerificationToken, getTokenResult.token);
+                        routeIdDictionary.Add("ComputerTypes", "PublicComputer");
+                        telemetryProperties = new Dictionary<string, string>();
+                        response = SendRequest(oneTimeFlexPartial, "GetRouteId", routeIdDictionary, telemetryProperties);
+                        var routeId = processRouteIdresponse(response);
+
+                        // Get drop id
+                        Dictionary<string, string> pickupLocationIdDictionary = new Dictionary<string, string>();
+                        pickupLocationIdDictionary.Add("isAm", "false");
+                        pickupLocationIdDictionary.Add("date", String.Format("{0:MM/dd/yyyy}", reservationDateTime));
+                        pickupLocationIdDictionary.Add("routeID", routeId);
+                        pickupLocationIdDictionary.Add(RequestVerificationToken, getTokenResult.token);
+                        pickupLocationIdDictionary.Add("ComputerTypes", "PublicComputer");
+                        telemetryProperties = new Dictionary<string, string>();
+                        response = SendRequest(oneTimeFlexPartial, "GetDropLocationId", pickupLocationIdDictionary, telemetryProperties);
+                        var dropId = processDropIdresponse(response);
 
                         // Book
                         Dictionary<string, string> bookingStandbyDictionary = new Dictionary<string, string>();
-                        DateTime reservationDateTime = DateTime.Today.AddDays(14);
-                        reservationDateTime = reservationDateTime.Date + new TimeSpan(4, 29, 0); // we book 14 weeks in advance
-                        bookingStandbyDictionary.Add("RouteID", "12770"); // This needs to be automated
+                        bookingStandbyDictionary.Add("RouteID", routeId); 
                         bookingStandbyDictionary.Add("OriginalDateTime", HttpUtility.UrlEncode(String.Format("{0:G}", reservationDateTime)));
                         bookingStandbyDictionary.Add("Bike", "False");
                         bookingStandbyDictionary.Add("Park", "False");
                         bookingStandbyDictionary.Add("WC", "False");
                         bookingStandbyDictionary.Add("PickID", "1");
-                        bookingStandbyDictionary.Add("DropID", "63");
+                        bookingStandbyDictionary.Add("DropID", dropId);
                         bookingStandbyDictionary.Add("CancelDoubleBooking", "False");
                         bookingStandbyDictionary.Add("OldFlexID", "0");
                         bookingStandbyDictionary.Add("AMorPMValue", "PM");
-                        bookingStandbyDictionary.Add("rbScheds", "118|42991|False|False|True|S");
+                        bookingStandbyDictionary.Add("rbScheds", "118|"+ routeId + "|False|False|True|S"); // 118 (corresponding to 4:29 PM) needs to be automated
                         bookingStandbyDictionary.Add("X-Requested-With", "XMLHttpRequest");
                         telemetryProperties = new Dictionary<string, string>();
                         SendRequest(bookStandbyUrl, "BookFlexOrStandby", bookingStandbyDictionary, telemetryProperties);
